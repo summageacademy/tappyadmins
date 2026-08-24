@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TappyStars — Admin Panel</title>
+    <style>
+        :root {
+            --bg: #F4F0EB;
+            --surface: #FFFFFF;
+            --text: #1C1C1C;
+            --muted: #737373;
+            --border: #1C1C1C;
+            --accent: #F5A623;
+            --green: #2ECC71;
+            --red: #E74C3C;
+            --blue: #3498DB;
+            --orange: #FF9800;
+            --sidebar-w: 240px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+
+        *::-webkit-scrollbar {
+            display: none;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .icon {
+            width: 18px;
+            height: 18px;
+            stroke: currentColor;
+            stroke-width: 2.2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            flex-shrink: 0;
+        }
+
+        .icon-sm {
+            width: 14px;
+            height: 14px;
+        }
+
+        .icon-lg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .icon-xl {
+            width: 28px;
+            height: 28px;
+        }
+
+        #login-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .login-card {
+            background: var(--surface);
+            border: 3px solid var(--border);
+            box-shadow: 8px 8px 0 var(--border);
+            border-radius: 16px;
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card .login-logo {
+            width: 56px;
+            height: 56px;
+            margin: 0 auto 16px;
+            background: #FFD700;
+            border: 3px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 0 var(--border);
+        }
+
+        .login-card h1 {
+            font-size: 1.5em;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .login-card p {
+            color: var(--muted);
+            font-size: 0.9em;
+            margin-bottom: 28px;
+        }
+
+        .login-card input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            outline: none;
+        }
+
+        .login-card input:focus {
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.3);
+        }
+
+        #admin-app {
+            display: none;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .shell {
+            display: flex;
+            height: 100%;
+        }
+
+        .sidebar {
+            width: var(--sidebar-w);
+            min-width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 3px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 2px solid #E8E4DF;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-brand .logo-box {
+            width: 40px;
+            height: 40px;
+            background: #FFD700;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 2px 2px 0 var(--border);
+        }
+
+        .sidebar-brand h1 {
+            font-size: 1.1em;
+            font-weight: 900;
+            line-height: 1.2;
+        }
+
+        .sidebar-brand h1 span {
+            display: block;
+            font-size: 0.65em;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95em;
+            color: var(--muted);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover {
+            background: #F8F5F0;
+            color: var(--text);
+        }
+
+        .nav-item.active {
+            background: #FFD700;
+            color: var(--text);
+            border-color: var(--border);
+            box-shadow: 2px 2px 0 var(--border);
+        }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 2px solid #E8E4DF;
+        }
+
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            min-width: 0;
+        }
+
+        .topbar {
+            background: var(--surface);
+            border-bottom: 2px solid #E8E4DF;
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .topbar h2 {
+            font-size: 1.25em;
+            font-weight: 900;
+        }
+
+        .topbar-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 28px;
+        }
+
+        .btn {
+            background: var(--surface);
+            color: var(--text);
+            border: 2px solid var(--border);
+            box-shadow: 3px 3px 0 var(--border);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 0 0 0 var(--border);
+        }
+
+        .btn-primary {
+            background: var(--border);
+            color: #fff;
+        }
+
+        .btn-success {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: var(--red);
+            color: #fff;
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: #fff;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8em;
+            box-shadow: 2px 2px 0 var(--border);
+            gap: 5px;
+        }
+
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: 4px 4px 0 var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+
+        .stat-card .stat-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .label {
+            font-size: 0.72em;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            letter-spacing: 0.4px;
+        }
+
+        .stat-card .stat-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card .value {
+            font-size: 1.7em;
+            font-weight: 900;
+            line-height: 1.1;
+        }
+
+        .stat-card.highlight {
+            background: #FFD700;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 360px;
+            padding: 11px 14px 11px 40px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 600;
+            outline: none;
+            background: var(--surface);
+        }
+
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            max-width: 360px;
+        }
+
+        .search-wrap .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--muted);
+            pointer-events: none;
+        }
+
+        .search-input:focus {
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.25);
+        }
+
+        .filter-select {
+            padding: 11px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.9em;
+            background: var(--surface);
+            cursor: pointer;
+            outline: none;
+        }
+
+        .table-wrap {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: 4px 4px 0 var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        thead {
+            background: #1C1C1C;
+            color: #fff;
+        }
+
+        th {
+            text-align: left;
+            padding: 14px 18px;
+            font-weight: 800;
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: 13px 18px;
+            border-bottom: 1px solid #E8E4DF;
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: #FFF8E7;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 0.72em;
+            border: 1.5px solid var(--border);
+            text-transform: uppercase;
+        }
+
+        .badge-pending { background: #FFF3CD; color: #856404; }
+        .badge-approved { background: #D4EDDA; color: #155724; }
+        .badge-sent { background: #CCE5FF; color: #004085; }
+        .badge-declined { background: #F8D7DA; color: #721C24; }
+
+        .user-id {
+            font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+            font-size: 0.82em;
+            color: var(--muted);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .empty-state, .loading-state {
+            text-align: center;
+            padding: 56px 20px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 3px solid var(--border);
+            box-shadow: 10px 10px 0 var(--border);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 88vh;
+            overflow-y: auto;
+            padding: 28px 32px;
+        }
+
+        .modal h2 {
+            font-size: 1.3em;
+            font-weight: 900;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            color: var(--muted);
+            display: flex;
+            align-items: center;
+        }
+
+        .modal-close:hover {
+            color: var(--text);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .detail-item {
+            background: #F8F5F0;
+            border: 1.5px solid #E0DCD6;
+            border-radius: 8px;
+            padding: 12px 14px;
+        }
+
+        .detail-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .detail-item .d-label {
+            font-size: 0.68em;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 4px;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-item .d-value {
+            font-weight: 700;
+            font-size: 0.95em;
+            word-break: break-all;
+        }
+
+        .json-block {
+            background: #1C1C1C;
+            color: #E2E8F0;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+            font-size: 0.78em;
+            white-space: pre-wrap;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        #toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #1C1C1C;
+            color: #fff;
+            padding: 14px 24px;
+            border-radius: 10px;
+            font-weight: 700;
+            z-index: 99999;
+            transition: transform 0.3s ease;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 18px;
+            align-items: center;
+        }
+
+        .page-info {
+            font-weight: 700;
+            color: var(--muted);
+            font-size: 0.88em;
+            margin: 0 8px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @media (min-width: 1400px) {
+            .stats-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .content {
+                padding: 32px 36px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 900px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .sidebar {
+                width: 200px;
+                min-width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <svg class="icon icon-xl" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="#1C1C1C" stroke="none"/></svg>
+            </div>
+            <h1>TappyStars</h1>
+            <p>Admin Panel — Enter password to continue</p>
+            <input type="password" id="admin-password" placeholder="Password" autocomplete="off">
+            <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="tryLogin()">
+                <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                Unlock Panel
+            </button>
+            <p id="login-error" style="color:var(--red); margin-top:12px; font-size:0.85em; display:none;">Wrong password</p>
+        </div>
+    </div>
+
+    <div id="admin-app">
+        <div class="shell">
+            <aside class="sidebar">
+                <div class="sidebar-brand">
+                    <div class="logo-box">
+                        <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" fill="#1C1C1C" stroke="none"/></svg>
+                    </div>
+                    <h1>TappyStars<span>Admin Panel</span></h1>
+                </div>
+
+                <nav class="sidebar-nav">
+                    <button class="nav-item active" data-tab="orders" onclick="switchTab('orders')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        Gift Orders
+                    </button>
+                    <button class="nav-item" data-tab="users" onclick="switchTab('users')">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Users
+                    </button>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <button class="btn btn-danger" style="width:100%; justify-content:center;" onclick="logout()">
+                        <svg class="icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                        Logout
+                    </button>
+                </div>
+            </aside>
+
+            <div class="main">
+                <div class="topbar">
+                    <h2 id="page-title">Gift Orders</h2>
+                    <div class="topbar-actions">
+                        <button class="btn" onclick="refreshAll()">
+                            <svg class="icon" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="content">
+                    <div class="stats-grid">
+                        <div class="stat-card highlight">
+                            <div class="stat-top">
+                                <div class="label">Total Users</div>
+                                <div class="stat-icon" style="background:#FFD700;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-users">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="label">Total Coins</div>
+                                <div class="stat-icon" style="background:#DBEAFE;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-coins">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="label">Total Stars</div>
+                                <div class="stat-icon" style="background:#FEF3C7;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-stars">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="label">Total Orders</div>
+                                <div class="stat-icon" style="background:#E0E7FF;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-orders">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="label">Pending Orders</div>
+                                <div class="stat-icon" style="background:#FEF9C3;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-pending">—</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-top">
+                                <div class="label">Stars Spent</div>
+                                <div class="stat-icon" style="background:#FCE7F3;">
+                                    <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                                </div>
+                            </div>
+                            <div class="value" id="stat-spent">—</div>
+                        </div>
+                    </div>
+
+                    <div id="tab-orders" class="tab-panel active">
+                        <div class="toolbar">
+                            <div class="search-wrap">
+                                <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" class="search-input" id="order-search" placeholder="Search gift, user ID, or name..." oninput="filterOrders()">
+                            </div>
+                            <select class="filter-select" id="order-filter" onchange="filterOrders()">
+                                <option value="all">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Declined">Declined</option>
+                            </select>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Gift</th>
+                                        <th>Cost</th>
+                                        <th>User</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="orders-tbody">
+                                    <tr><td colspan="6" class="loading-state">Loading orders...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="orders-pagination"></div>
+                    </div>
+
+                    <div id="tab-users" class="tab-panel">
+                        <div class="toolbar">
+                            <div class="search-wrap">
+                                <svg class="icon search-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                                <input type="text" class="search-input" id="user-search" placeholder="Search by name or user ID..." oninput="filterUsers()">
+                            </div>
+                            <select class="filter-select" id="user-sort" onchange="filterUsers()">
+                                <option value="stars-desc">Stars High to Low</option>
+                                <option value="stars-asc">Stars Low to High</option>
+                                <option value="coins-desc">Coins High to Low</option>
+                                <option value="coins-asc">Coins Low to High</option>
+                                <option value="name">Name A-Z</option>
+                            </select>
+                        </div>
+
+                        <div class="table-wrap">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>User ID</th>
+                                        <th>Stars</th>
+                                        <th>Coins</th>
+                                        <th>Car</th>
+                                        <th>Onboarded</th>
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-tbody">
+                                    <tr><td colspan="7" class="loading-state">Loading users...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="pagination" id="users-pagination"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal">
+            <h2>
+                <span id="modal-user-name">User Details</span>
+                <button class="modal-close" onclick="closeUserModal()">
+                    <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </h2>
+            <div class="detail-grid" id="user-detail-grid"></div>
+        </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import {
+            getFirestore, collection, getDocs, doc, updateDoc
+        } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyARFZrw8zUknJPaCfQyLfqZVQZefKeSKDo",
+            authDomain: "tappystars.firebaseapp.com",
+            projectId: "tappystars",
+            storageBucket: "tappystars.firebasestorage.app",
+            messagingSenderId: "63927707932",
+            appId: "1:63927707932:web:cab22697e0906412c0b2d9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const ADMIN_PASSWORD = "tappystars2024";
+
+        let allUsers = [];
+        let allOrders = [];
+        let filteredUsers = [];
+        let filteredOrders = [];
+        let usersPage = 1;
+        let ordersPage = 1;
+        const PAGE_SIZE = 25;
+
+        window.tryLogin = () => {
+            const pw = document.getElementById('admin-password').value;
+            if (pw === ADMIN_PASSWORD) {
+                sessionStorage.setItem('tappy_admin', '1');
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('admin-app').style.display = 'block';
+                loadAllData();
+            } else {
+                document.getElementById('login-error').style.display = 'block';
+            }
+        };
+
+        window.logout = () => {
+            sessionStorage.removeItem('tappy_admin');
+            location.reload();
+        };
+
+        if (sessionStorage.getItem('tappy_admin') === '1') {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('admin-app').style.display = 'block';
+            loadAllData();
+        }
+
+        document.getElementById('admin-password')?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') tryLogin();
+        });
+
+        async function loadAllData() {
+            try {
+                await Promise.all([loadUsers(), loadOrders()]);
+                computeStats();
+                filterUsers();
+                filterOrders();
+                showToast('Data refreshed');
+            } catch (e) {
+                console.error(e);
+                showToast('Error loading data: ' + e.message);
+            }
+        }
+
+        window.refreshAll = loadAllData;
+
+        async function loadUsers() {
+            const snap = await getDocs(collection(db, "users"));
+            allUsers = [];
+            snap.forEach(d => allUsers.push({ id: d.id, ...d.data() }));
+        }
+
+        async function loadOrders() {
+            const snap = await getDocs(collection(db, "purchases"));
+            allOrders = [];
+            snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+            allOrders.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+        }
+
+        function computeStats() {
+            let totalCoins = 0, totalStars = 0;
+            allUsers.forEach(u => {
+                totalCoins += Number(u.coins) || 0;
+                totalStars += Number(u.stars) || 0;
+            });
+            const pending = allOrders.filter(o => (o.state || 'Pending') === 'Pending').length;
+            let spent = 0;
+            allOrders.forEach(o => {
+                if (o.state !== 'Declined') spent += Number(o.starCost) || 0;
+            });
+
+            document.getElementById('stat-users').textContent = allUsers.length.toLocaleString();
+            document.getElementById('stat-coins').textContent = totalCoins.toLocaleString();
+            document.getElementById('stat-stars').textContent = totalStars.toLocaleString();
+            document.getElementById('stat-orders').textContent = allOrders.length.toLocaleString();
+            document.getElementById('stat-pending').textContent = pending.toLocaleString();
+            document.getElementById('stat-spent').textContent = spent.toLocaleString();
+        }
+
+        const pageTitles = { orders: 'Gift Orders', users: 'Users' };
+
+        window.switchTab = (tabId) => {
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            document.querySelector(`.nav-item[data-tab="${tabId}"]`)?.classList.add('active');
+            document.getElementById(`tab-${tabId}`)?.classList.add('active');
+            document.getElementById('page-title').textContent = pageTitles[tabId] || tabId;
+        };
+
+        window.filterOrders = () => {
+            const q = (document.getElementById('order-search').value || '').toLowerCase().trim();
+            const status = document.getElementById('order-filter').value;
+
+            filteredOrders = allOrders.filter(o => {
+                const matchStatus = status === 'all' || (o.state || 'Pending') === status;
+                if (!matchStatus) return false;
+                if (!q) return true;
+                const gift = (o.giftName || '').toLowerCase();
+                const uid = (o.userId || '').toLowerCase();
+                const user = allUsers.find(u => u.id === o.userId);
+                const name = (user?.name || '').toLowerCase();
+                return gift.includes(q) || uid.includes(q) || name.includes(q);
+            });
+
+            ordersPage = 1;
+            renderOrders();
+        };
+
+        function renderOrders() {
+            const tbody = document.getElementById('orders-tbody');
+            const start = (ordersPage - 1) * PAGE_SIZE;
+            const pageItems = filteredOrders.slice(start, start + PAGE_SIZE);
+
+            if (filteredOrders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No orders found</td></tr>`;
+                document.getElementById('orders-pagination').innerHTML = '';
+                return;
+            }
+
+            let html = '';
+            pageItems.forEach(o => {
+                const user = allUsers.find(u => u.id === o.userId);
+                const name = user?.name || 'Unknown';
+                const state = o.state || 'Pending';
+                const date = o.timestamp ? new Date(o.timestamp).toLocaleString() : '—';
+                const badgeClass = {
+                    'Pending': 'badge-pending',
+                    'Approved': 'badge-approved',
+                    'Sent': 'badge-sent',
+                    'Declined': 'badge-declined'
+                }[state] || 'badge-pending';
+
+                const checkIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+                const sendIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
+                const xIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+                const resetIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`;
+
+                html += `
+                    <tr>
+                        <td style="white-space:nowrap; font-size:0.85em;">${date}</td>
+                        <td><strong>${escapeHtml(o.giftName || '—')}</strong></td>
+                        <td>${o.starCost || 0}</td>
+                        <td>
+                            <div style="font-weight:700;">${escapeHtml(name)}</div>
+                            <div class="user-id">${escapeHtml(o.userId || '')}</div>
+                        </td>
+                        <td><span class="badge ${badgeClass}">${state}</span></td>
+                        <td>
+                            <div class="actions-cell">
+                                ${state !== 'Approved' && state !== 'Sent' ? `<button class="btn btn-success btn-sm" onclick="setOrderStatus('${o.id}', 'Approved')">${checkIcon} Approve</button>` : ''}
+                                ${state !== 'Sent' ? `<button class="btn btn-blue btn-sm" onclick="setOrderStatus('${o.id}', 'Sent')">${sendIcon} Sent</button>` : ''}
+                                ${state !== 'Declined' ? `<button class="btn btn-danger btn-sm" onclick="setOrderStatus('${o.id}', 'Declined')">${xIcon} Decline</button>` : ''}
+                                ${state !== 'Pending' ? `<button class="btn btn-sm" onclick="setOrderStatus('${o.id}', 'Pending')">${resetIcon} Reset</button>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            renderPagination('orders', filteredOrders.length, ordersPage, (p) => { ordersPage = p; renderOrders(); });
+        }
+
+        window.setOrderStatus = async (orderId, newState) => {
+            try {
+                await updateDoc(doc(db, "purchases", orderId), { state: newState });
+                const order = allOrders.find(o => o.id === orderId);
+                if (order) order.state = newState;
+                computeStats();
+                filterOrders();
+                showToast('Order marked as ' + newState);
+            } catch (e) {
+                console.error(e);
+                showToast('Failed to update order: ' + e.message);
+            }
+        };
+
+        window.filterUsers = () => {
+            const q = (document.getElementById('user-search').value || '').toLowerCase().trim();
+            const sort = document.getElementById('user-sort').value;
+
+            filteredUsers = allUsers.filter(u => {
+                if (!q) return true;
+                return (u.name || '').toLowerCase().includes(q) || (u.id || '').toLowerCase().includes(q);
+            });
+
+            filteredUsers.sort((a, b) => {
+                switch (sort) {
+                    case 'stars-desc': return (b.stars || 0) - (a.stars || 0);
+                    case 'stars-asc': return (a.stars || 0) - (b.stars || 0);
+                    case 'coins-desc': return (b.coins || 0) - (a.coins || 0);
+                    case 'coins-asc': return (a.coins || 0) - (b.coins || 0);
+                    case 'name': return (a.name || '').localeCompare(b.name || '');
+                    default: return 0;
+                }
+            });
+
+            usersPage = 1;
+            renderUsers();
+        };
+
+        function renderUsers() {
+            const tbody = document.getElementById('users-tbody');
+            const start = (usersPage - 1) * PAGE_SIZE;
+            const pageItems = filteredUsers.slice(start, start + PAGE_SIZE);
+
+            if (filteredUsers.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No users found</td></tr>`;
+                document.getElementById('users-pagination').innerHTML = '';
+                return;
+            }
+
+            const viewIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`;
+            const checkIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24" style="color:var(--green)"><polyline points="20 6 9 17 4 12"/></svg>`;
+            const dashIcon = `<span style="color:var(--muted)">—</span>`;
+
+            let html = '';
+            pageItems.forEach(u => {
+                html += `
+                    <tr>
+                        <td><strong>${escapeHtml(u.name || 'Unknown')}</strong></td>
+                        <td class="user-id">${escapeHtml(u.id)}</td>
+                        <td style="font-weight:800;">${(u.stars || 0).toLocaleString()}</td>
+                        <td style="font-weight:800;">${(u.coins || 0).toLocaleString()}</td>
+                        <td>${escapeHtml(u.currentCar || 'car_runner')}</td>
+                        <td>${u.hasOnboarded ? checkIcon : dashIcon}</td>
+                        <td>
+                            <button class="btn btn-sm" onclick="showUserDetail('${u.id}')">${viewIcon} View</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+            renderPagination('users', filteredUsers.length, usersPage, (p) => { usersPage = p; renderUsers(); });
+        }
+
+        window.showUserDetail = (userId) => {
+            const u = allUsers.find(x => x.id === userId);
+            if (!u) return;
+
+            document.getElementById('modal-user-name').textContent = u.name || 'Unknown User';
+
+            const carStats = u.carStats || {};
+            const boosters = u.activeBoosters || {};
+            const cooldowns = u.cooldowns || {};
+            const chest = u.chestProgress || {};
+            const owned = (u.ownedCars || []).join(', ') || '—';
+            const now = Date.now();
+            const activeBoostList = Object.entries(boosters)
+                .filter(([, exp]) => exp > now)
+                .map(([k, exp]) => `${k} (${Math.ceil((exp - now) / 60000)}m left)`)
+                .join(', ') || 'None';
+
+            document.getElementById('user-detail-grid').innerHTML = `
+                <div class="detail-item">
+                    <div class="d-label">User ID</div>
+                    <div class="d-value">${escapeHtml(u.id)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Name</div>
+                    <div class="d-value">${escapeHtml(u.name || '—')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Stars</div>
+                    <div class="d-value">${(u.stars || 0).toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Coins</div>
+                    <div class="d-value">${(u.coins || 0).toLocaleString()}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Tap Coins Today</div>
+                    <div class="d-value">${(u.tapCoinsEarned || 0).toLocaleString()} / 1000</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Last Tap Date</div>
+                    <div class="d-value">${u.lastTapDate || '—'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Current Car</div>
+                    <div class="d-value">${escapeHtml(u.currentCar || 'car_runner')}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Owned Cars</div>
+                    <div class="d-value">${escapeHtml(owned)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Speed Level</div>
+                    <div class="d-value">${carStats.speed || 1}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Smoothness Level</div>
+                    <div class="d-value">${carStats.smoothness || 1}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Onboarded</div>
+                    <div class="d-value">${u.hasOnboarded ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Welcome Bonus Claimed</div>
+                    <div class="d-value">${u.hasClaimedWelcome ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="detail-item full">
+                    <div class="d-label">Active Boosters</div>
+                    <div class="d-value">${escapeHtml(activeBoostList)}</div>
+                </div>
+                <div class="detail-item full">
+                    <div class="d-label">Chest Progress</div>
+                    <div class="d-value">Small: ${chest.small || 0} · Medium: ${chest.medium || 0} · Mega: ${chest.mega || 0} · News: ${chest.news || 0}</div>
+                </div>
+                <div class="detail-item full">
+                    <div class="d-label">Raw activeBoosters</div>
+                    <div class="json-block">${escapeHtml(JSON.stringify(boosters, null, 2))}</div>
+                </div>
+                <div class="detail-item full">
+                    <div class="d-label">Raw cooldowns</div>
+                    <div class="json-block">${escapeHtml(JSON.stringify(cooldowns, null, 2))}</div>
+                </div>
+                <div class="detail-item full">
+                    <div class="d-label">Full Document (JSON)</div>
+                    <div class="json-block">${escapeHtml(JSON.stringify(u, null, 2))}</div>
+                </div>
+            `;
+
+            document.getElementById('user-modal').classList.add('open');
+        };
+
+        window.closeUserModal = () => {
+            document.getElementById('user-modal').classList.remove('open');
+        };
+
+        document.getElementById('user-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'user-modal') closeUserModal();
+        });
+
+        function renderPagination(type, total, current, onPage) {
+            const el = document.getElementById(`${type}-pagination`);
+            const pages = Math.ceil(total / PAGE_SIZE) || 1;
+            if (pages <= 1) {
+                el.innerHTML = total > 0 ? `<span class="page-info">${total} total</span>` : '';
+                return;
+            }
+
+            const prevIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>`;
+            const nextIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>`;
+
+            el.innerHTML = `
+                <button class="btn btn-sm" ${current <= 1 ? 'disabled' : ''} onclick="window._page_${type}(${current - 1})">${prevIcon} Prev</button>
+                <span class="page-info">Page ${current} / ${pages} (${total} total)</span>
+                <button class="btn btn-sm" ${current >= pages ? 'disabled' : ''} onclick="window._page_${type}(${current + 1})">Next ${nextIcon}</button>
+            `;
+            window[`_page_${type}`] = onPage;
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerHTML = `<svg class="icon" viewBox="0 0 24 24" style="stroke:#fff"><polyline points="20 6 9 17 4 12"/></svg> ${msg}`;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2800);
+        }
+    </script>
+</body>
+</html>
