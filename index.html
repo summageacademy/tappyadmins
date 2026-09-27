@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TappyStars — Admin Panel</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <style>
         :root {
             --bg: #F4F0EB;
@@ -659,6 +660,74 @@
                 min-width: 200px;
             }
         }
+
+        /* Analytics */
+        .analytics-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .chart-range-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+        .range-btn {
+            padding: 8px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+            font-weight: 800;
+            font-size: 0.82em;
+            cursor: pointer;
+            box-shadow: 2px 2px 0 var(--border);
+        }
+        .range-btn.active {
+            background: #FFD700;
+        }
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            box-shadow: 4px 4px 0 var(--border);
+            border-radius: 12px;
+            padding: 18px 20px;
+        }
+        .chart-card.full {
+            grid-column: 1 / -1;
+        }
+        .chart-card h3 {
+            font-size: 0.95em;
+            font-weight: 900;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chart-card h3 .sub {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: var(--muted);
+        }
+        .chart-wrap {
+            position: relative;
+            height: 260px;
+        }
+        .chart-wrap.tall {
+            height: 320px;
+        }
+        @media (max-width: 1100px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .analytics-stats { grid-template-columns: repeat(2, 1fr); }
+        }
     </style>
 </head>
 <body>
@@ -696,6 +765,10 @@
                     <button class="nav-item" data-tab="users" onclick="switchTab('users')">
                         <svg class="icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                         Users
+                    </button>
+                    <button class="nav-item" data-tab="analytics" onclick="switchTab('analytics')">
+                        <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                        Analytics
                     </button>
                 </nav>
 
@@ -834,8 +907,8 @@
                                         <th>User ID</th>
                                         <th>Stars</th>
                                         <th>Coins</th>
-                                        <th>Car</th>
-                                        <th>Onboarded</th>
+                                        <th>Clicks</th>
+                                        <th>Ads</th>
                                         <th>Details</th>
                                     </tr>
                                 </thead>
@@ -845,6 +918,59 @@
                             </table>
                         </div>
                         <div class="pagination" id="users-pagination"></div>
+                    </div>
+
+                    <!-- ANALYTICS -->
+                    <div id="tab-analytics" class="tab-panel">
+                        <div class="analytics-stats">
+                            <div class="stat-card highlight">
+                                <div class="stat-top"><div class="label">DAU (Today)</div></div>
+                                <div class="value" id="a-dau">—</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-top"><div class="label">MAU (This Month)</div></div>
+                                <div class="value" id="a-mau">—</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-top"><div class="label">Ads Today</div></div>
+                                <div class="value" id="a-ads-today">—</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-top"><div class="label">Total Ads (All Time)</div></div>
+                                <div class="value" id="a-ads-total">—</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-range-bar">
+                            <span style="font-weight:800;font-size:0.85em;color:var(--muted);">Range:</span>
+                            <button class="range-btn active" data-range="7" onclick="setAnalyticsRange(7)">7 days</button>
+                            <button class="range-btn" data-range="30" onclick="setAnalyticsRange(30)">30 days</button>
+                            <button class="range-btn" data-range="90" onclick="setAnalyticsRange(90)">90 days</button>
+                            <button class="range-btn" data-range="all" onclick="setAnalyticsRange('all')">All time</button>
+                        </div>
+
+                        <div class="charts-grid">
+                            <div class="chart-card">
+                                <h3>Daily Active Users (DAU) <span class="sub" id="dau-range-label">Last 7 days</span></h3>
+                                <div class="chart-wrap"><canvas id="chart-dau"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Monthly Active Users (MAU) <span class="sub">By month</span></h3>
+                                <div class="chart-wrap"><canvas id="chart-mau"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Ads Watched (Daily) <span class="sub" id="ads-range-label">Last 7 days</span></h3>
+                                <div class="chart-wrap"><canvas id="chart-ads-day"></canvas></div>
+                            </div>
+                            <div class="chart-card">
+                                <h3>Ads Watched (Monthly) <span class="sub">By month</span></h3>
+                                <div class="chart-wrap"><canvas id="chart-ads-month"></canvas></div>
+                            </div>
+                            <div class="chart-card full">
+                                <h3>Ads Watched (Yearly) <span class="sub">By year</span></h3>
+                                <div class="chart-wrap tall"><canvas id="chart-ads-year"></canvas></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -887,11 +1013,36 @@
 
         let allUsers = [];
         let allOrders = [];
+        let allAnalytics = []; // { id, type: 'dau'|'mau'|'ads', date/month, count }
         let filteredUsers = [];
         let filteredOrders = [];
         let usersPage = 1;
         let ordersPage = 1;
         const PAGE_SIZE = 25;
+        let analyticsRange = 7;
+        let chartDau = null, chartMau = null, chartAdsDay = null, chartAdsMonth = null, chartAdsYear = null;
+
+        function tashkentToday() {
+            const now = new Date();
+            const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+            const tash = new Date(utc + 5 * 60 * 60000);
+            return tash.toISOString().split('T')[0];
+        }
+        function tashkentMonth() {
+            return tashkentToday().slice(0, 7);
+        }
+        function orderState(o) {
+            return o.state || (o.status ? (o.status.charAt(0).toUpperCase() + o.status.slice(1)) : 'Pending');
+        }
+        function orderGift(o) {
+            return o.giftName || o.gift || o.name || '—';
+        }
+        function orderCost(o) {
+            return Number(o.starCost ?? o.cost ?? 0);
+        }
+        function orderTime(o) {
+            return o.timestamp || o.createdAt || o.date || 0;
+        }
 
         window.tryLogin = () => {
             const pw = document.getElementById('admin-password').value;
@@ -922,10 +1073,11 @@
 
         async function loadAllData() {
             try {
-                await Promise.all([loadUsers(), loadOrders()]);
+                await Promise.all([loadUsers(), loadOrders(), loadAnalytics()]);
                 computeStats();
                 filterUsers();
                 filterOrders();
+                renderAnalytics();
                 showToast('Data refreshed');
             } catch (e) {
                 console.error(e);
@@ -945,7 +1097,27 @@
             const snap = await getDocs(collection(db, "purchases"));
             allOrders = [];
             snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
-            allOrders.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+            allOrders.sort((a, b) => new Date(orderTime(b)) - new Date(orderTime(a)));
+        }
+
+        async function loadAnalytics() {
+            allAnalytics = [];
+            try {
+                const snap = await getDocs(collection(db, "analytics"));
+                snap.forEach(d => {
+                    const data = d.data();
+                    const id = d.id;
+                    if (id.startsWith('dau_')) {
+                        allAnalytics.push({ id, type: 'dau', date: data.date || id.slice(4), count: Number(data.count) || 0 });
+                    } else if (id.startsWith('mau_')) {
+                        allAnalytics.push({ id, type: 'mau', month: data.month || id.slice(4), count: Number(data.count) || 0 });
+                    } else if (id.startsWith('ads_')) {
+                        allAnalytics.push({ id, type: 'ads', date: data.date || id.slice(4), count: Number(data.count) || 0 });
+                    }
+                });
+            } catch (e) {
+                console.warn('analytics load', e);
+            }
         }
 
         function computeStats() {
@@ -954,10 +1126,14 @@
                 totalCoins += Number(u.coins) || 0;
                 totalStars += Number(u.stars) || 0;
             });
-            const pending = allOrders.filter(o => (o.state || 'Pending') === 'Pending').length;
+            const pending = allOrders.filter(o => {
+                const s = orderState(o);
+                return s === 'Pending' || s === 'pending';
+            }).length;
             let spent = 0;
             allOrders.forEach(o => {
-                if (o.state !== 'Declined') spent += Number(o.starCost) || 0;
+                const s = orderState(o);
+                if (s !== 'Declined' && s !== 'denied') spent += orderCost(o);
             });
 
             document.getElementById('stat-users').textContent = allUsers.length.toLocaleString();
@@ -968,7 +1144,7 @@
             document.getElementById('stat-spent').textContent = spent.toLocaleString();
         }
 
-        const pageTitles = { orders: 'Gift Orders', users: 'Users' };
+        const pageTitles = { orders: 'Gift Orders', users: 'Users', analytics: 'Analytics' };
 
         window.switchTab = (tabId) => {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -976,6 +1152,7 @@
             document.querySelector(`.nav-item[data-tab="${tabId}"]`)?.classList.add('active');
             document.getElementById(`tab-${tabId}`)?.classList.add('active');
             document.getElementById('page-title').textContent = pageTitles[tabId] || tabId;
+            if (tabId === 'analytics') renderAnalytics();
         };
 
         window.filterOrders = () => {
@@ -983,14 +1160,16 @@
             const status = document.getElementById('order-filter').value;
 
             filteredOrders = allOrders.filter(o => {
-                const matchStatus = status === 'all' || (o.state || 'Pending') === status;
+                const st = orderState(o);
+                const matchStatus = status === 'all' || st === status || st.toLowerCase() === status.toLowerCase();
                 if (!matchStatus) return false;
                 if (!q) return true;
-                const gift = (o.giftName || '').toLowerCase();
+                const gift = orderGift(o).toLowerCase();
                 const uid = (o.userId || '').toLowerCase();
+                const uname = (o.username || '').toLowerCase();
                 const user = allUsers.find(u => u.id === o.userId);
-                const name = (user?.name || '').toLowerCase();
-                return gift.includes(q) || uid.includes(q) || name.includes(q);
+                const name = (user?.name || o.name || '').toLowerCase();
+                return gift.includes(q) || uid.includes(q) || name.includes(q) || uname.includes(q);
             });
 
             ordersPage = 1;
@@ -1011,29 +1190,35 @@
             let html = '';
             pageItems.forEach(o => {
                 const user = allUsers.find(u => u.id === o.userId);
-                const name = user?.name || 'Unknown';
-                const state = o.state || 'Pending';
-                const date = o.timestamp ? new Date(o.timestamp).toLocaleString() : '—';
+                const name = user?.name || o.name || 'Unknown';
+                const state = orderState(o);
+                const ts = orderTime(o);
+                const date = ts ? new Date(ts).toLocaleString() : '—';
                 const badgeClass = {
                     'Pending': 'badge-pending',
+                    'pending': 'badge-pending',
                     'Approved': 'badge-approved',
+                    'approved': 'badge-approved',
                     'Sent': 'badge-sent',
-                    'Declined': 'badge-declined'
+                    'sent': 'badge-sent',
+                    'Declined': 'badge-declined',
+                    'denied': 'badge-declined'
                 }[state] || 'badge-pending';
 
                 const checkIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
                 const sendIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`;
                 const xIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
                 const resetIcon = `<svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>`;
+                const uname = o.username ? '@' + o.username : '';
 
                 html += `
                     <tr>
                         <td style="white-space:nowrap; font-size:0.85em;">${date}</td>
-                        <td><strong>${escapeHtml(o.giftName || '—')}</strong></td>
-                        <td>${o.starCost || 0}</td>
+                        <td><strong>${escapeHtml(orderGift(o))}</strong></td>
+                        <td>${orderCost(o)} ⭐</td>
                         <td>
                             <div style="font-weight:700;">${escapeHtml(name)}</div>
-                            <div class="user-id">${escapeHtml(o.userId || '')}</div>
+                            <div class="user-id">${escapeHtml(o.userId || '')} ${escapeHtml(uname)}</div>
                         </td>
                         <td><span class="badge ${badgeClass}">${state}</span></td>
                         <td>
@@ -1053,9 +1238,16 @@
 
         window.setOrderStatus = async (orderId, newState) => {
             try {
-                await updateDoc(doc(db, "purchases", orderId), { state: newState });
+                const statusLower = newState.toLowerCase();
+                await updateDoc(doc(db, "purchases", orderId), {
+                    state: newState,
+                    status: statusLower === 'declined' ? 'denied' : statusLower
+                });
                 const order = allOrders.find(o => o.id === orderId);
-                if (order) order.state = newState;
+                if (order) {
+                    order.state = newState;
+                    order.status = statusLower === 'declined' ? 'denied' : statusLower;
+                }
                 computeStats();
                 filterOrders();
                 showToast('Order marked as ' + newState);
@@ -1112,8 +1304,8 @@
                         <td class="user-id">${escapeHtml(u.id)}</td>
                         <td style="font-weight:800;">${(u.stars || 0).toLocaleString()}</td>
                         <td style="font-weight:800;">${(u.coins || 0).toLocaleString()}</td>
-                        <td>${escapeHtml(u.currentCar || 'car_runner')}</td>
-                        <td>${u.hasOnboarded ? checkIcon : dashIcon}</td>
+                        <td>${(u.totalClicks || 0).toLocaleString()}</td>
+                        <td>${(u.totalAdsWatched || 0).toLocaleString()}</td>
                         <td>
                             <button class="btn btn-sm" onclick="showUserDetail('${u.id}')">${viewIcon} View</button>
                         </td>
@@ -1130,16 +1322,15 @@
 
             document.getElementById('modal-user-name').textContent = u.name || 'Unknown User';
 
-            const carStats = u.carStats || {};
-            const boosters = u.activeBoosters || {};
-            const cooldowns = u.cooldowns || {};
+            const boosters = u.boosts || {};
+            const cooldowns = u.boostCooldowns || {};
             const chest = u.chestProgress || {};
-            const owned = (u.ownedCars || []).join(', ') || '—';
             const now = Date.now();
             const activeBoostList = Object.entries(boosters)
                 .filter(([, exp]) => exp > now)
                 .map(([k, exp]) => `${k} (${Math.ceil((exp - now) / 60000)}m left)`)
                 .join(', ') || 'None';
+            const lastActive = u.lastActiveAt ? new Date(u.lastActiveAt).toLocaleString() : '—';
 
             document.getElementById('user-detail-grid').innerHTML = `
                 <div class="detail-item">
@@ -1159,36 +1350,36 @@
                     <div class="d-value">${(u.coins || 0).toLocaleString()}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Tap Coins Today</div>
-                    <div class="d-value">${(u.tapCoinsEarned || 0).toLocaleString()} / 1000</div>
+                    <div class="d-label">Total Clicks</div>
+                    <div class="d-value">${(u.totalClicks || 0).toLocaleString()}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Last Tap Date</div>
-                    <div class="d-value">${u.lastTapDate || '—'}</div>
+                    <div class="d-label">Energy</div>
+                    <div class="d-value">${(u.energy || 0).toLocaleString()}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Current Car</div>
-                    <div class="d-value">${escapeHtml(u.currentCar || 'car_runner')}</div>
+                    <div class="d-label">Ads Today</div>
+                    <div class="d-value">${u.adsToday || 0} (${u.adsDate || '—'})</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Owned Cars</div>
-                    <div class="d-value">${escapeHtml(owned)}</div>
+                    <div class="d-label">Total Ads Watched</div>
+                    <div class="d-value">${(u.totalAdsWatched || 0).toLocaleString()}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Speed Level</div>
-                    <div class="d-value">${carStats.speed || 1}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="d-label">Smoothness Level</div>
-                    <div class="d-value">${carStats.smoothness || 1}</div>
+                    <div class="d-label">Referrals</div>
+                    <div class="d-value">${u.referralCount || 0}</div>
                 </div>
                 <div class="detail-item">
                     <div class="d-label">Onboarded</div>
-                    <div class="d-value">${u.hasOnboarded ? 'Yes' : 'No'}</div>
+                    <div class="d-value">${u.onboardingDone ? 'Yes' : 'No'}</div>
                 </div>
                 <div class="detail-item">
-                    <div class="d-label">Welcome Bonus Claimed</div>
-                    <div class="d-value">${u.hasClaimedWelcome ? 'Yes' : 'No'}</div>
+                    <div class="d-label">Last Active</div>
+                    <div class="d-value">${escapeHtml(lastActive)}</div>
+                </div>
+                <div class="detail-item">
+                    <div class="d-label">Today Tap Coins</div>
+                    <div class="d-value">${(u.todayTapCoins || 0).toLocaleString()}</div>
                 </div>
                 <div class="detail-item full">
                     <div class="d-label">Active Boosters</div>
@@ -1196,14 +1387,14 @@
                 </div>
                 <div class="detail-item full">
                     <div class="d-label">Chest Progress</div>
-                    <div class="d-value">Small: ${chest.small || 0} · Medium: ${chest.medium || 0} · Mega: ${chest.mega || 0} · News: ${chest.news || 0}</div>
+                    <div class="d-value">Medium: ${chest.medium || 0} · Mega: ${chest.mega || 0} · News: ${chest.news || 0}</div>
                 </div>
                 <div class="detail-item full">
-                    <div class="d-label">Raw activeBoosters</div>
+                    <div class="d-label">Raw boosts</div>
                     <div class="json-block">${escapeHtml(JSON.stringify(boosters, null, 2))}</div>
                 </div>
                 <div class="detail-item full">
-                    <div class="d-label">Raw cooldowns</div>
+                    <div class="d-label">Raw boostCooldowns</div>
                     <div class="json-block">${escapeHtml(JSON.stringify(cooldowns, null, 2))}</div>
                 </div>
                 <div class="detail-item full">
@@ -1240,6 +1431,191 @@
                 <button class="btn btn-sm" ${current >= pages ? 'disabled' : ''} onclick="window._page_${type}(${current + 1})">Next ${nextIcon}</button>
             `;
             window[`_page_${type}`] = onPage;
+        }
+
+        // ─── ANALYTICS ───────────────────────────────────────
+        window.setAnalyticsRange = (range) => {
+            analyticsRange = range;
+            document.querySelectorAll('.range-btn').forEach(b => {
+                b.classList.toggle('active', String(b.dataset.range) === String(range));
+            });
+            const label = range === 'all' ? 'All time' : `Last ${range} days`;
+            const el1 = document.getElementById('dau-range-label');
+            const el2 = document.getElementById('ads-range-label');
+            if (el1) el1.textContent = label;
+            if (el2) el2.textContent = label;
+            renderAnalytics();
+        };
+
+        function dateList(days) {
+            const out = [];
+            const today = tashkentToday();
+            const [y, m, d] = today.split('-').map(Number);
+            const base = new Date(Date.UTC(y, m - 1, d));
+            const n = days === 'all' ? 365 : Number(days);
+            for (let i = n - 1; i >= 0; i--) {
+                const dt = new Date(base);
+                dt.setUTCDate(base.getUTCDate() - i);
+                out.push(dt.toISOString().slice(0, 10));
+            }
+            return out;
+        }
+
+        function monthList(count) {
+            const out = [];
+            const today = tashkentToday();
+            const [y, m] = today.split('-').map(Number);
+            let yy = y, mm = m;
+            for (let i = 0; i < count; i++) {
+                out.unshift(`${yy}-${String(mm).padStart(2, '0')}`);
+                mm -= 1;
+                if (mm < 1) { mm = 12; yy -= 1; }
+            }
+            return out;
+        }
+
+        function chartDefaults(labelColor = '#1C1C1C') {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { mode: 'index', intersect: false }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#737373', maxRotation: 45, font: { weight: '600', size: 10 } },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#737373', precision: 0, font: { weight: '600' } },
+                        grid: { color: 'rgba(0,0,0,0.06)' }
+                    }
+                }
+            };
+        }
+
+        function destroyChart(c) {
+            if (c) try { c.destroy(); } catch (e) {}
+        }
+
+        function makeLineChart(canvasId, labels, data, color, prevChart) {
+            destroyChart(prevChart);
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return null;
+            return new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        borderColor: color,
+                        backgroundColor: color + '33',
+                        fill: true,
+                        tension: 0.35,
+                        pointRadius: labels.length > 60 ? 0 : 3,
+                        pointHoverRadius: 5,
+                        borderWidth: 2.5
+                    }]
+                },
+                options: chartDefaults()
+            });
+        }
+
+        function makeBarChart(canvasId, labels, data, color, prevChart) {
+            destroyChart(prevChart);
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return null;
+            return new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: color,
+                        borderColor: '#1C1C1C',
+                        borderWidth: 1.5,
+                        borderRadius: 4
+                    }]
+                },
+                options: chartDefaults()
+            });
+        }
+
+        function renderAnalytics() {
+            const today = tashkentToday();
+            const thisMonth = tashkentMonth();
+            const now = Date.now();
+
+            // Live DAU from users (active in last 30h) as primary today metric
+            const liveDau = allUsers.filter(u => u.lastActiveAt && (now - u.lastActiveAt) < 30 * 60 * 60 * 1000).length;
+            const liveMau = allUsers.filter(u => u.lastActiveAt && (now - u.lastActiveAt) < 31 * 24 * 60 * 60 * 1000).length;
+            const dauDoc = allAnalytics.find(a => a.type === 'dau' && a.date === today);
+            const mauDoc = allAnalytics.find(a => a.type === 'mau' && a.month === thisMonth);
+
+            // Ads today from analytics doc or sum of users
+            const adsDocToday = allAnalytics.find(a => a.type === 'ads' && a.date === today);
+            let adsToday = adsDocToday ? adsDocToday.count : 0;
+            if (!adsDocToday) {
+                adsToday = allUsers.reduce((s, u) => s + ((u.adsDate === today) ? (u.adsToday || 0) : 0), 0);
+            }
+            const adsTotal = allUsers.reduce((s, u) => s + (Number(u.totalAdsWatched) || 0), 0);
+
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = Number(v).toLocaleString(); };
+            set('a-dau', Math.max(liveDau, dauDoc?.count || 0));
+            set('a-mau', Math.max(liveMau, mauDoc?.count || 0));
+            set('a-ads-today', adsToday);
+            set('a-ads-total', adsTotal);
+
+            // DAU series
+            const days = dateList(analyticsRange);
+            const dauMap = {};
+            allAnalytics.filter(a => a.type === 'dau').forEach(a => { dauMap[a.date] = a.count; });
+            // Backfill today with live if missing
+            if (!dauMap[today]) dauMap[today] = liveDau;
+            const dauData = days.map(d => dauMap[d] || 0);
+            chartDau = makeLineChart('chart-dau', days.map(d => d.slice(5)), dauData, '#F5A623', chartDau);
+
+            // MAU series (last 12 or 24 months)
+            const months = monthList(analyticsRange === 'all' ? 24 : 12);
+            const mauMap = {};
+            allAnalytics.filter(a => a.type === 'mau').forEach(a => { mauMap[a.month] = a.count; });
+            if (!mauMap[thisMonth]) mauMap[thisMonth] = liveMau;
+            const mauData = months.map(m => mauMap[m] || 0);
+            chartMau = makeBarChart('chart-mau', months, mauData, '#3498DB', chartMau);
+
+            // Ads daily
+            const adsMap = {};
+            allAnalytics.filter(a => a.type === 'ads').forEach(a => { adsMap[a.date] = a.count; });
+            if (!adsMap[today]) adsMap[today] = adsToday;
+            const adsDayData = days.map(d => adsMap[d] || 0);
+            chartAdsDay = makeLineChart('chart-ads-day', days.map(d => d.slice(5)), adsDayData, '#E74C3C', chartAdsDay);
+
+            // Ads monthly (aggregate daily ads by month + leftover from user totals is incomplete historically)
+            const adsMonthMap = {};
+            Object.entries(adsMap).forEach(([date, count]) => {
+                const m = date.slice(0, 7);
+                adsMonthMap[m] = (adsMonthMap[m] || 0) + count;
+            });
+            const adsMonthData = months.map(m => adsMonthMap[m] || 0);
+            chartAdsMonth = makeBarChart('chart-ads-month', months, adsMonthData, '#9B59B6', chartAdsMonth);
+
+            // Ads yearly
+            const yearMap = {};
+            Object.entries(adsMap).forEach(([date, count]) => {
+                const y = date.slice(0, 4);
+                yearMap[y] = (yearMap[y] || 0) + count;
+            });
+            // Ensure current year shows at least total from users if no daily series yet
+            const cy = today.slice(0, 4);
+            if (!yearMap[cy] || yearMap[cy] < adsTotal) {
+                // Prefer sum of known daily; if sparse, still show daily-based year total
+            }
+            const years = Object.keys(yearMap).sort();
+            if (years.length === 0) years.push(cy);
+            const yearData = years.map(y => yearMap[y] || 0);
+            chartAdsYear = makeBarChart('chart-ads-year', years, yearData, '#2ECC71', chartAdsYear);
         }
 
         function escapeHtml(str) {
